@@ -1,4 +1,4 @@
-# \[Team Norway\]
+# \Team Norway\
 
 **Group members:**
 - Mie Hustad
