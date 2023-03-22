@@ -158,40 +158,6 @@ class HouseholdSpecializationModelClass:
 
  
 
-    def run_regression(self):
-        """ run regression """
-
-        par = self.par
-        sol = self.sol
-
-        par.wF_vec = np.linspace(0.8, 1.2, 5)
-
-        # f. solution
-        sol.HM_vec = np.zeros(par.wF_vec.size)
-        sol.HF_vec = np.zeros(par.wF_vec.size)
-        
-
-        x = np.log(par.wF_vec)
-        y = np.log(sol.HF_vec/sol.HM_vec)
-        A = np.vstack([np.ones(x.size),x]).T
-        sol.beta0, sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
-    
-        return sol.beta0, sol.beta1
-
-    
-    def estimate(self,alpha=None,sigma=None):
-        """ estimate alpha and sigma """
-
-        pass
-
-
-    np.linspace(0.8,1.2,5)
-
-
-    
-
-
-
     def run3_regression(self):
         """ run regression """
 
@@ -202,21 +168,50 @@ class HouseholdSpecializationModelClass:
 
         # f. solution
 
-        print('HM_vec:', sol.HM_vec)
-        print('HF_vec:', sol.HF_vec)
+        #print('HM_vec:', sol.HM_vec)
+        #print('HF_vec:', sol.HF_vec)
+        self.solve_continuous()
+        
+        sol.HF_vec
 
         x = np.log(par.wF_vec)
         y = np.log(sol.HF_vec/sol.HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
 
-        print('x:', x)
-        print('y:', y)
-        print('A:', A)
+        #print('x:', x)
+        #print('y:', y)
+        #print('A:', A)
         sol.beta0, sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
-        print('b0:', sol.beta0)
-        print('b1:', sol.beta1)
     
-        return sol.beta0, sol.beta1
+        return sol.beta0, sol.beta1 
+
+    def estimate(self):
+        """Estimate alpha and sigma"""
+
+        def objective(x):
+            # Function to minimize by changing alpha and sigma
+            self.par.alpha, self.par.sigma = x
+            self.par.beta0_target = 0.4
+            self.par.beta1_target = -0.1
+            self.run3_regression()
+            return (self.par.beta0_target - self.sol.beta0)**2 + (self.par.beta1_target - self.sol.beta1)**2
+
+        res = minimize(objective,x0=[1.0, 5.0],  method='Nelder-Mead')
+        self.par.alpha, self.par.sigma = res.x
+        
+        return res
+    
+
+
+
+
+
+
+    
+
+
+
+
 
 
 
