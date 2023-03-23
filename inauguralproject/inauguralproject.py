@@ -31,6 +31,8 @@ class HouseholdSpecializationModelClass:
         par.wM = 1.0
         par.wF = 1.0
         par.wF_vec = np.linspace(0.8,1.2,5)
+        #hhhhhhhh
+        par.wM_vec = np.linspace(1,1,5)
 
         # e. targets
         par.beta0_target = 0.4
@@ -151,31 +153,53 @@ class HouseholdSpecializationModelClass:
         return opt
 
 
-    def solve_wF_vec(self,discrete=False):
-        """ solve model for vector of female wages """
+    
+    
+    def solve_wF_vec(self, discrete=False):
+        """ 
+        solve model for vector of female wages and fixed male wage
+        """
 
-        pass
+        par = self.par
+        sol = self.sol
+        wF = self.par.wF_vec
 
- 
 
+
+        # loop over wF and wM and solve model
+        for j, val in enumerate(wF):
+            par.wF = val
+            #par.wM = np.linspace(1,1,5)
+            if discrete == True: # for discrete choice model
+                results = self.solve_discrete()
+            else: #for continuous choice model
+                results = self.solve_continuous()
+            # store results
+            sol.LM_vec[j] = results.LM
+            sol.HM_vec[j] = results.HM
+            sol.LF_vec[j] = results.LF
+            sol.HF_vec[j] = results.HF
+        
     def run3_regression(self):
         """ run regression """
 
         par = self.par
         sol = self.sol
 
-        par.wF_vec = np.linspace(0.8, 1.2, 5)
 
-        # f. solution
+        # solve model for vector of wF and wM
+        #store = self.solve_wF_vec()
 
-        #print('HM_vec:', sol.HM_vec)
-        #print('HF_vec:', sol.HF_vec)
-        self.solve_continuous()
-        
-        sol.HF_vec
+        # extract HF and HM vectors
+        #HF_vec = store.HF_vec.flatten()
+        #HM_vec = store.HM_vec.flatten()
+
+        # solution
+        #self.solve_continuous()
 
         x = np.log(par.wF_vec)
         y = np.log(sol.HF_vec/sol.HM_vec)
+        #y = np.log(HF_vec/HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
 
         #print('x:', x)
@@ -183,20 +207,26 @@ class HouseholdSpecializationModelClass:
         #print('A:', A)
         sol.beta0, sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
     
-        return sol.beta0, sol.beta1 
+        #return sol.beta0, sol.beta1 
+    
+    def objective(self, x):
+        # Function to minimize by changing alpha and sigma
+        self.par.alpha, self.par.sigma = x
+        self.par.beta0_target = 0.4
+        self.par.beta1_target = -0.1
+        self.solve_wF_vec()
+        self.run3_regression()
+
+        return (self.par.beta0_target - self.sol.beta0)**2 + (self.par.beta1_target - self.sol.beta1)**2
+      
 
     def estimate(self):
         """Estimate alpha and sigma"""
 
-        def objective(x):
-            # Function to minimize by changing alpha and sigma
-            self.par.alpha, self.par.sigma = x
-            self.par.beta0_target = 0.4
-            self.par.beta1_target = -0.1
-            self.run3_regression()
-            return (self.par.beta0_target - self.sol.beta0)**2 + (self.par.beta1_target - self.sol.beta1)**2
+          
+        bounds = [(0.0001, 2), (0.0001, 10)]
 
-        res = minimize(objective,x0=[1.0, 5.0],  method='Nelder-Mead')
+        res = minimize(self.objective, x0=[0.5, 0.5],  method='Nelder-Mead', bounds=bounds)
         self.par.alpha, self.par.sigma = res.x
         
         return res
