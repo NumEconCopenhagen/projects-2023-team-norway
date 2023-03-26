@@ -1,4 +1,5 @@
 # Inaugural project
+In this project we solve a household model for both discrete and continous choiches. 
 
 The **results** of the project can be seen from running [inauguralproject.ipynb](inauguralproject.ipynb).
 
