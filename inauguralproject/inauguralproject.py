@@ -57,7 +57,6 @@ class HouseholdSpecializationModelClass:
         C = par.wM*LM + par.wF*LF
 
         # b. home production
-        
         if par.sigma == 0:
             H = min(HM, HF)
         elif par.sigma == 1:
@@ -154,7 +153,6 @@ class HouseholdSpecializationModelClass:
 
 
     
-    
     def solve_wF_vec(self, discrete=False):
         """ 
         solve model for vector of female wages and fixed male wage
@@ -163,8 +161,6 @@ class HouseholdSpecializationModelClass:
         par = self.par
         sol = self.sol
         wF = self.par.wF_vec
-
-
 
         # loop over wF and wM and solve model
         for j, val in enumerate(wF):
@@ -186,31 +182,19 @@ class HouseholdSpecializationModelClass:
         par = self.par
         sol = self.sol
 
-
-        # solve model for vector of wF and wM
-        #store = self.solve_wF_vec()
-
-        # extract HF and HM vectors
-        #HF_vec = store.HF_vec.flatten()
-        #HM_vec = store.HM_vec.flatten()
-
-        # solution
-        #self.solve_continuous()
-
         x = np.log(par.wF_vec)
         y = np.log(sol.HF_vec/sol.HM_vec)
         #y = np.log(HF_vec/HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
+    
 
-        #print('x:', x)
-        #print('y:', y)
-        #print('A:', A)
         sol.beta0, sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
     
-        #return sol.beta0, sol.beta1 
+
     
     def objective(self, x):
-        # Function to minimize by changing alpha and sigma
+        """Function to minimize the error by changing alpha and sigma"""
+
         self.par.alpha, self.par.sigma = x
         self.par.beta0_target = 0.4
         self.par.beta1_target = -0.1
@@ -218,7 +202,8 @@ class HouseholdSpecializationModelClass:
         self.run3_regression()
 
         return (self.par.beta0_target - self.sol.beta0)**2 + (self.par.beta1_target - self.sol.beta1)**2
-      
+
+
 
     def estimate(self):
         """Estimate alpha and sigma"""
@@ -229,19 +214,37 @@ class HouseholdSpecializationModelClass:
         res = minimize(self.objective, x0=[0.5, 0.5],  method='Nelder-Mead', bounds=bounds)
         self.par.alpha, self.par.sigma = res.x
         
+        return res 
+    
+
+    def estimate2(self):
+        """Estimate sigma while keeping alpha constant at 0.5"""
+
+        # Define the objective function to minimize
+        def objective(x):
+            self.par.sigma = x[0]
+            self.par.alpha = 0.5
+            self.par.beta0_target = 0.4
+            self.par.beta1_target = -0.1
+            self.solve_wF_vec()
+            self.run3_regression()
+
+            print(f"alpha = {self.par.alpha}, sigma = {self.par.sigma}")
+            print(f"beta0 = {self.sol.beta0}, beta1 = {self.sol.beta1}")
+
+            return (self.par.beta0_target - self.sol.beta0)**2 + (self.par.beta1_target - self.sol.beta1)**2
+
+        # Define the bounds
+        bounds = [(0.0001, 10)]
+
+        # Use the Nelder-Mead optimization algorithm to find the solution
+        res = minimize(objective, x0=[0.5], method='Nelder-Mead', bounds=bounds)
+
+        # Set the optimal value of sigma
+        self.par.sigma = res.x[0]
+
         return res
     
 
-
-
-
-
-
     
-
-
-
-
-
-
 
