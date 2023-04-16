@@ -10,5 +10,3 @@ We apply the **following datasets**:
 2. API codes from the American Community Survey (*https://api.census.gov/data/2020/acs/acs5/variables.html*)
 
 **Dependencies:** Apart from a standard Anaconda Python 3 installation, the project requires the following installations:
-
-``pip install matplotlib-venn``
