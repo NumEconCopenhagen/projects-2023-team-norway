@@ -12,6 +12,7 @@ class HouseholdSpecializationModelClass:
 
     def __init__(self):
         """ setup model """
+        
 
         # a. create namespaces
         par = self.par = SimpleNamespace()
@@ -31,7 +32,6 @@ class HouseholdSpecializationModelClass:
         par.wM = 1.0
         par.wF = 1.0
         par.wF_vec = np.linspace(0.8,1.2,5)
-        #hhhhhhhh
         par.wM_vec = np.linspace(1,1,5)
 
         # e. targets
@@ -46,6 +46,10 @@ class HouseholdSpecializationModelClass:
 
         sol.beta0 = np.nan
         sol.beta1 = np.nan
+        
+        #  Extension
+        par.work_disutility_gap = 0.0
+
 
     def calc_utility(self,LM,HM,LF,HF):
         """ calculate utility """
@@ -72,11 +76,13 @@ class HouseholdSpecializationModelClass:
         epsilon_ = 1+1/par.epsilon
         TM = LM+HM
         TF = LF+HF
-        disutility = par.nu*(TM**epsilon_/epsilon_+TF**epsilon_/epsilon_)
+        #disutility = par.nu*(TM**epsilon_/epsilon_+TF**epsilon_/epsilon_)
+        disutility = par.nu * (TM ** epsilon_ / epsilon_ + (1 + par.work_disutility_gap) * TF ** epsilon_ / epsilon_)
+
         
         return utility - disutility
 
-    def solve_discrete(self,do_print=False):
+    def solve_discrete(self, do_print=False):
         """ solve model discretely """
         
         par = self.par
@@ -96,7 +102,7 @@ class HouseholdSpecializationModelClass:
         u = self.calc_utility(LM,HM,LF,HF)
     
         # c. set to minus infinity if constraint is broken
-        I = (LM+HM > 24) | (LF+HF > 24) # | is "or"
+        I = (LM+HM > 24) | (LF+HF > 24) 
         u[I] = -np.inf
     
         # d. find maximizing argument
@@ -115,7 +121,7 @@ class HouseholdSpecializationModelClass:
         return opt
 
 
-    def solve_continuous(self, do_print=False):
+    def solve_continuous(self, pay_gap=0.0, do_print=False):
         """ solve model continuously """
 
         par = self.par
@@ -244,6 +250,11 @@ class HouseholdSpecializationModelClass:
         self.par.sigma = res.x[0]
 
         return res
+        
+    
+    def set_work_disutility_gap(self, value):
+        self.par.work_disutility_gap = value
+
     
 
     
