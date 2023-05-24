@@ -12,8 +12,6 @@ class HouseholdSpecializationModelClass:
 
     def __init__(self):
         """ setup model """
-        
-
         # a. create namespaces
         par = self.par = SimpleNamespace()
         sol = self.sol = SimpleNamespace()
@@ -128,29 +126,29 @@ class HouseholdSpecializationModelClass:
         sol = self.sol
         opt = SimpleNamespace()
 
-        # Define the objective function to maximize
+        # a. Define the objective function to maximize
         def objective(x):
             LM, HM, LF, HF = x
             return -self.calc_utility(LM, HM, LF, HF)
 
-        # Define the constraints
+        # b. Define the constraints
         cons = [{'type': 'ineq', 'fun': lambda x: 24 - x[0] - x[1]}, 
                 {'type': 'ineq', 'fun': lambda x: 24 - x[2] - x[3]}]
 
-        # Define the bounds
+        # c. Define the bounds
         bounds = [(0, 24), (0, 24), (0, 24), (0, 24)]
 
-        # Use the SLSQP optimization algorithm to find the solution
+        # d. Use the SLSQP optimization algorithm to find the solution
         res = minimize(objective, x0=[12, 12, 12, 12], method='SLSQP', bounds=bounds, constraints=cons)
         res = minimize(objective, x0=[12, 12, 12, 12], method='Nelder-Mead', bounds=bounds, constraints=cons)
 
-        # Set the optimal values
+        # e. Set the optimal values
         opt.LM = res.x[0]
         opt.HM = res.x[1]
         opt.LF = res.x[2]
         opt.HF = res.x[3]
 
-        # Print the results if do_print is True
+        # f. Print the results if do_print is True
         if do_print:
             for k, v in opt.__dict__.items():
                 print(f'{k} = {v:6.4f}')
@@ -168,7 +166,7 @@ class HouseholdSpecializationModelClass:
         sol = self.sol
         wF = self.par.wF_vec
 
-        # loop over wF and wM and solve model
+        # a. loop over wF and wM and solve model
         for j, val in enumerate(wF):
             par.wF = val
             #par.wM = np.linspace(1,1,5)
@@ -190,14 +188,11 @@ class HouseholdSpecializationModelClass:
 
         x = np.log(par.wF_vec)
         y = np.log(sol.HF_vec/sol.HM_vec)
-        #y = np.log(HF_vec/HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
-    
 
         sol.beta0, sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
     
 
-    
     def objective(self, x):
         """Function to minimize the error by changing alpha and sigma"""
 
@@ -210,13 +205,10 @@ class HouseholdSpecializationModelClass:
         return (self.par.beta0_target - self.sol.beta0)**2 + (self.par.beta1_target - self.sol.beta1)**2
 
 
-
     def estimate(self):
         """Estimate alpha and sigma"""
 
-          
         bounds = [(0.0001, 2), (0.0001, 10)]
-
         res = minimize(self.objective, x0=[0.5, 0.5],  method='Nelder-Mead', bounds=bounds)
         self.par.alpha, self.par.sigma = res.x
         
@@ -226,7 +218,7 @@ class HouseholdSpecializationModelClass:
     def estimate2(self):
         """Estimate sigma while keeping alpha constant at 0.5"""
 
-        # Define the objective function to minimize
+        # Defines the objective function to minimize
         def objective(x):
             self.par.sigma = x[0]
             self.par.alpha = 0.5
@@ -240,18 +232,18 @@ class HouseholdSpecializationModelClass:
 
             return (self.par.beta0_target - self.sol.beta0)**2 + (self.par.beta1_target - self.sol.beta1)**2
 
-        # Define the bounds
+        # Defines the bounds
         bounds = [(0.0001, 10)]
 
-        # Use the Nelder-Mead optimization algorithm to find the solution
+        # Using the Nelder-Mead optimization algorithm to find the solution of the minimization
         res = minimize(objective, x0=[0.5], method='Nelder-Mead', bounds=bounds)
 
-        # Set the optimal value of sigma
+        # Setting the optimal value of sigma
         self.par.sigma = res.x[0]
 
         return res
         
-    
+        # Making the disutility function
     def set_work_disutility_gap(self, value):
         self.par.work_disutility_gap = value
 
