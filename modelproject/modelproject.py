@@ -72,6 +72,7 @@ class SIRModel3:
         plt.plot(D, label="Deaths")
         plt.plot(V, label="Vaccinated")
         plt.legend()
+        plt.title("SIR Model With Vaccination")
         plt.show()
 
     def total_deaths(self, num_days, vaccination_rate):
