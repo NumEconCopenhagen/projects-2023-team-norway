@@ -34,3 +34,7 @@ The **results** of the project can be seen from running [modelproject.ipynb](mod
 
 **Dependencies:** Apart from a standard Anaconda Python 3 installation, the project requires no further packages.
 
+## Exam 
+
+The file exam.py contains all the classes for most of the separate questions in each problem. The team_norway.ipynb contains out solution to all the questions in the exam. 
+
